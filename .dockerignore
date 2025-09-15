@@ -1,0 +1,6 @@
+.git
+*.o
+bin/
+obj/
+Dockerfile
+README.md
