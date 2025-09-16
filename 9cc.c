@@ -22,10 +22,18 @@ struct Token {
 
 Token *token;
 
-void error(char *fmt, ...) { // fmtはフォーマット文字列(printfと同じ書き方), ...は可変長引数
-    va_list ap; //可変長引数を扱うための変数
-    va_start(ap, fmt); // fmtの次の引数から可変長引数リストをapにセットする
-    vfprintf(stderr, fmt, ap); // printfの可変長版
+char* user_input;
+
+// エラー箇所を報告する
+void error_at(char* loc, char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+
+    int pos = loc - user_input;
+    fprintf(stderr, "%s\n", user_input);
+    fprintf(stderr, "%*s", pos, " ");
+    fprintf(stderr, "^ ");
+    vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
     exit(1);
 }
@@ -44,7 +52,8 @@ bool consume(char op) {
 // それ以外の場合にはエラーを報告する。
 void expect(char op) {
     if (token->kind != TK_RESERVED || token->str[0] != op) {
-        error("'%c'ではありません", op);
+        // error("'%c'ではありません", op);
+        error_at(token->str, "'%c'ではありません", op);
     }
     token = token->next;
 }
@@ -53,7 +62,8 @@ void expect(char op) {
 // それ以外の場合にはエラーを報告する。
 int expect_number() {
     if (token->kind != TK_NUM) {
-        error("数ではありません");
+        // error("数ではありません");
+        error_at(token->str, "数ではありません");
     }
     int val = token->val;
     token = token->next;
@@ -94,7 +104,8 @@ Token* tokenize(char* p) {
             continue;
         }
 
-        error("トークナイズできません");
+        // error("トークナイズできません");
+        error_at(p, "トークナイズできません");
     }
 
     new_token(TK_EOF, cur, p);
@@ -107,6 +118,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    user_input = argv[1];
     token = tokenize(argv[1]);
 
     printf(".intel_syntax noprefix\n");
